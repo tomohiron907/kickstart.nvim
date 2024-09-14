@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -163,6 +163,8 @@ vim.opt.scrolloff = 10
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+-- nerdtree toggle keymaps
+vim.keymap.set('n', '<C-n>', '<cmd>NERDTreeToggle<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -185,11 +187,11 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
+vim.keymap.set('n', 'H', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+vim.keymap.set('n', 'L', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+vim.keymap.set('n', 'J', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+vim.keymap.set('n', 'K', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+vim.keymap.set('n', 'U', '<C-r>', { desc = 'Redo' })
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -230,7 +232,7 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
+  'preservim/nerdtree',
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
@@ -255,7 +257,12 @@ require('lazy').setup({
       },
     },
   },
-
+  {
+    'craftzdog/solarized-osaka.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {},
+  },
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -607,7 +614,24 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {
+          handlers = {
+            ['textDocument/publishDiagnostics'] = function(_, result, ctx, config)
+              if not result then
+                return
+              end
+              local filtered_diagnostics = {}
+              for _, diagnostic in ipairs(result.diagnostics) do
+                -- エラー以外の診断メッセージを残す
+                if diagnostic.severity ~= vim.lsp.protocol.DiagnosticSeverity.Error then
+                  table.insert(filtered_diagnostics, diagnostic)
+                end
+              end
+              result.diagnostics = filtered_diagnostics
+              vim.lsp.handlers['textDocument/publishDiagnostics'](_, result, ctx, config)
+            end,
+          },
+        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
