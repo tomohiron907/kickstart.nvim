@@ -263,6 +263,14 @@ require('lazy').setup({
     priority = 1000,
     opts = {},
   },
+  {
+    'crispgm/nvim-auto-ime',
+    config = function()
+      require('auto-ime').setup {
+        ime_source = 'com.apple.inputmethod.SCIM.ITABC',
+      }
+    end,
+  },
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
