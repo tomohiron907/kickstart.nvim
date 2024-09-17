@@ -155,7 +155,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 20
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -165,6 +165,12 @@ vim.opt.scrolloff = 10
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- nerdtree toggle keymaps
 vim.keymap.set('n', '<C-n>', '<cmd>NERDTreeToggle<CR>')
+
+vim.keymap.set('n', 'tt', function()
+  vim.cmd 'vsplit' -- 画面を縦に分割します
+  vim.cmd 'term' -- ターミナルを開きます
+  vim.cmd 'startinsert' -- インサートモードに入ります
+end, { noremap = true, silent = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -206,6 +212,11 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+vim.api.nvim_create_autocmd('VimEnter', {
+  pattern = '*',
+  command = 'NERDTree',
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -245,6 +256,10 @@ require('lazy').setup({
   --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
+  --
+  --
+  --PLUGIN SECTION
+  --
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
@@ -271,6 +286,32 @@ require('lazy').setup({
       }
     end,
   },
+
+  {
+    'pocco81/auto-save.nvim',
+    opts = {
+      enabled = true, -- Neovim起動時に自動保存を有効化
+      execution_message = {
+        message = function() -- 保存後のメッセージを空にする
+          return ''
+        end,
+        dim = 0.18, -- メッセージの透明度
+        cleaning_interval = 2000, -- メッセージが消えるまでの時間（ミリ秒）
+      },
+      events = { 'InsertLeave', 'TextChanged' }, -- 自動保存がトリガーされるイベント
+      conditions = {
+        exists = true,
+        filename_is_not = {},
+        filetype_is_not = {},
+        modifiable = true,
+      },
+      write_all_buffers = false, -- 全てのバッファを保存しない
+      on_off_commands = true, -- :ASToggleコマンドで自動保存のオン/オフを切り替え可能
+      clean_command_line_interval = 0, -- コマンドラインメッセージを消すまでの時間（ミリ秒）
+      debounce_delay = 135, -- デバウンス時間（ミリ秒）
+    },
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
